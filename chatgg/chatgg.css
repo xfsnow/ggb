@@ -737,3 +737,52 @@ body {
   border-radius: 4px;
   font-size: 12px;
 }
+
+/* ==================== Markdown 表格样式（默认） ==================== */
+.ggb-markdown-table {
+  width: 100%;
+  max-width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  font-size: 13px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+}
+
+.message-content .ggb-markdown-table th,
+.message-content .ggb-markdown-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid #f0f0f0;
+  text-align: left;
+  vertical-align: middle;
+}
+
+.message-content .ggb-markdown-table thead th {
+  background: #fafafa;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 1px solid #e6e6e6;
+}
+
+.message-content .ggb-markdown-table tbody tr:nth-child(even) td {
+  background: #fbfbfb;
+}
+
+.message-content .ggb-markdown-table td code {
+  white-space: pre-wrap;
+  word-break: break-word;
+  background: transparent;
+  font-family: inherit;
+}
+
+/* 小屏幕时允许横向滚动以避免挤压 */
+.message-content .ggb-markdown-table {
+  display: table;
+}
+
+.message-content .ggb-markdown-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}

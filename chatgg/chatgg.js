@@ -837,14 +837,84 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function parseMarkdown(text) {
-    return text
-      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
+    // 提取代码块，避免对代码块内部进行额外替换
+    const codeBlocks = [];
+    text = text.replace(/```([\s\S]*?)```/g, (m, p1) => {
+      codeBlocks.push(p1);
+      return `@@CODEBLOCK${codeBlocks.length - 1}@@`;
+    });
+
+    // 将 Markdown 表格解析为 HTML 表格
+    const lines = text.split('\n');
+    const out = [];
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+      const next = lines[i + 1] || '';
+
+      const looksLikeTableHeader = line.indexOf('|') >= 0;
+      const looksLikeSeparator = /^(\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)+\|?\s*)$/.test(next);
+
+      if (looksLikeTableHeader && looksLikeSeparator) {
+        // 解析表头单元格
+        const headerCells = line.split('|').map(s => s.trim()).filter((v, idx, arr) => !(v === '' && (idx === 0 || idx === arr.length -1)));
+
+        // 跳过分隔行
+        i += 2;
+
+        const rows = [];
+        while (i < lines.length && lines[i].indexOf('|') >= 0) {
+          const rowCells = lines[i].split('|').map(s => s.trim()).filter((v, idx, arr) => !(v === '' && (idx === 0 || idx === arr.length -1)));
+          if (rowCells.length === 0) break;
+          rows.push(rowCells);
+          i++;
+        }
+
+        // 构建无换行的 HTML 表格字符串
+        let tableHtml = '<table class="ggb-markdown-table"><thead><tr>';
+        headerCells.forEach(cell => {
+          tableHtml += `<th>${escapeHtml(cell)}</th>`;
+        });
+        tableHtml += '</tr></thead><tbody>';
+
+        rows.forEach(r => {
+          tableHtml += '<tr>';
+          r.forEach(cell => {
+            tableHtml += `<td>${escapeHtml(cell)}</td>`;
+          });
+          tableHtml += '</tr>';
+        });
+
+        tableHtml += '</tbody></table>';
+
+        out.push(tableHtml);
+        continue; // 已经前进到表格结束后的下一行
+      }
+
+      out.push(line);
+      i++;
+    }
+
+    text = out.join('\n');
+
+    // 标题、加粗等简单替换
+    text = text
       .replace(/^#### (.+)$/gm, '<h4>$1</h4>')
       .replace(/^### (.+)$/gm, '<h3>$1</h3>')
       .replace(/^## (.+)$/gm, '<h2>$1</h2>')
       .replace(/^# (.+)$/gm, '<h1>$1</h1>')
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    // 将剩余的换行转换为 <br>
+    text = text.replace(/\n/g, '<br>');
+
+    // 恢复代码块，并对代码内容做 HTML 转义
+    text = text.replace(/@@CODEBLOCK(\d+)@@/g, (m, idx) => {
+      const code = codeBlocks[Number(idx)] || '';
+      return `<pre><code>${escapeHtml(code)}</code></pre>`;
+    });
+
+    return text;
   }
 
   function formatMessage(content) {
