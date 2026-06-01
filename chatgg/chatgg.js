@@ -660,20 +660,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const initHeight = Math.max(container.clientHeight || 400, 240);
 
     const params = {
-      "id": containerId,
-      "width": initWidth,
-      "height": initHeight,
-      "showToolBar": false,
-      "showAlgebraInput": false,
-      "showMenuBar": false,
-      "appName": "geometry",
-      "language": "en",
-      "enableLabelDrags": false,
-      "enableShiftDragZoom": true,
-      "showZoomButtons": true,
-      "capturingThreshold": null,
-      "useBrowserForJS": false
+        id: containerId,
+        width: initWidth,
+        height: initHeight,
+        showToolBar: false,
+        showAlgebraInput: false,
+        showMenuBar: false,
+        
+        // 1. 👉 将 "geometry" 改为 "classic"，或者直接注释/删除这一行
+        appName: "classic", 
+        
+        language: "en",
+        enableLabelDrags: false,
+        enableShiftDragZoom: true,
+        showZoomButtons: true,
+        capturingThreshold: null,
+        useBrowserForJS: false,
+
+        // 2. 👉 下面这三个其实是非标准参数，在 classic 模式下不需要，可以直接删掉
+        // showAlgebraView: false,
+        // showSidebar: false,
+        // perspective: "C"
     };
+
 
     if (viewRange) {
       params["xmin"] = viewRange.xMin || -10;
@@ -693,9 +702,9 @@ document.addEventListener('DOMContentLoaded', () => {
           if (typeof api.setErrorDialogsActive === 'function') api.setErrorDialogsActive(false);
         } catch(e) {}
         
-        setTimeout(() => {
-          try { hideGGBAlgebraPanel(containerId); } catch(e) {}
-        }, 500);
+        // setTimeout(() => {
+        //   try { hideGGBAlgebraPanel(containerId); } catch(e) {}
+        // }, 500);
       };
       
       applet.inject(containerId, 'preferHTML5');
