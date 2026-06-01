@@ -702,9 +702,30 @@ document.addEventListener('DOMContentLoaded', () => {
           if (typeof api.setErrorDialogsActive === 'function') api.setErrorDialogsActive(false);
         } catch(e) {}
         
-        // setTimeout(() => {
-        //   try { hideGGBAlgebraPanel(containerId); } catch(e) {}
-        // }, 500);
+        // 1. 👉 获取画板容器以及它的直属父级外壳
+        const containerEl = document.getElementById(containerId);
+        const wrapperEl = containerEl ? containerEl.parentElement : null;
+        
+        if (wrapperEl && typeof ResizeObserver !== 'undefined') {
+          const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+              // 2. ⚠️ 注意：这里获取的是【父级外壳 wrapper】的最新真实宽度
+              const newWidth = entry.contentRect.width;
+              
+              // 高度你可以固定为 500px，或者按比例（如宽度的 0.6）动态计算
+              const newHeight = 500; 
+              
+              // 加上安全大小限制，防止在容器隐藏或初次渲染为 0 时导致 GeoGebra 崩溃
+              if (newWidth > 100) {
+                // 3. 👉 让 GeoGebra 去自适应父级外壳的宽度
+                api.setSize(newWidth, newHeight);
+              }
+            }
+          });
+          
+          // 4. ⚠️ 核心改动：这里注册监听的是父级外壳 wrapperEl，而不是 containerEl
+          resizeObserver.observe(wrapperEl);
+        }
       };
       
       applet.inject(containerId, 'preferHTML5');

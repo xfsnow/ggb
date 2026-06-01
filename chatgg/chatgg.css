@@ -345,7 +345,7 @@ body {
 /* ==================== GeoGebra 画板 ==================== */
 .ggb-container-wrapper {
   width: 100%;
-  min-width: 600px;
+  /* min-width: 600px; */
   display: flex;
   flex-direction: column;
   justify-content: center;
