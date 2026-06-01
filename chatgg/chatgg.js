@@ -756,14 +756,55 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 setTimeout(function() {
                   try {
+                    // 1. 发送命令，强制让 GeoGebra 的 X 轴和 Y 轴比例设为 1:1
+                    if (typeof ggbApi.evalCommand === 'function') {
+                      ggbApi.evalCommand("SetAxesRatio[1, 1]");
+                    }
+
                     if (viewRange && ggbApi.setCoordSystem) {
-                      ggbApi.setCoordSystem(
-                        viewRange.xMin || -10, viewRange.xMax || 10,
-                        viewRange.yMin || -10, viewRange.yMax || 10
-                      );
+                      let xMin = viewRange.xMin || -10;
+                      let xMax = viewRange.xMax || 10;
+                      let yMin = viewRange.yMin || -10;
+                      let yMax = viewRange.yMax || 10;
+
+                      // 2. 获取当前画板容器的真实像素尺寸
+                      const containerEl = document.getElementById(containerId);
+                      if (containerEl) {
+                        const canvasWidth = containerEl.clientWidth || 600;
+                        const canvasHeight = containerEl.clientHeight || 500;
+                        const canvasRatio = canvasWidth / canvasHeight; // 容器长宽比
+
+                        const desiredWidth = xMax - xMin;
+                        const desiredHeight = yMax - yMin;
+                        const desiredRatio = desiredWidth / desiredHeight; // 图形长宽比
+
+                        // 3. 根据长宽比例差距，自动扩展坐标轴边界，防止强行拉伸变形
+                        if (canvasRatio > desiredRatio) {
+                          // 画板太宽了，等比例加宽 X 轴的左右范围，让图形居中
+                          const adjustedWidth = desiredHeight * canvasRatio;
+                          const xCenter = (xMin + xMax) / 2;
+                          xMin = xCenter - adjustedWidth / 2;
+                          xMax = xCenter + adjustedWidth / 2;
+                        } else {
+                          // 画板太高了，等比例加高 Y 轴的上下范围，让图形居中
+                          const adjustedHeight = desiredWidth / canvasRatio;
+                          const yCenter = (yMin + yMax) / 2;
+                          yMin = yCenter - adjustedHeight / 2;
+                          yMax = yCenter + adjustedHeight / 2;
+                        }
+                      }
+
+                      // 4. 应用调整后绝对不会变形的坐标系统
+                      ggbApi.setCoordSystem(xMin, xMax, yMin, yMax);
+                      
+                      // 5. 双重保险：再次锁定 1:1 比例
+                      if (typeof ggbApi.evalCommand === 'function') {
+                        ggbApi.evalCommand("SetAxesRatio[1, 1]");
+                      }
                     } else if (typeof ggbApi.zoomTo === 'function') {
                       ggbApi.zoomTo(200);
                     }
+                    
                     if (typeof ggbApi.refreshViews === 'function') ggbApi.refreshViews();
                   } catch (e) {
                     console.error('[GeoGebra] 调整视图失败:', e);
